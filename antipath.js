@@ -1,5 +1,6 @@
 // Sync with server
 var connection = new WebSocket('ws://127.0.0.1:9095/server');
+var tileSize = 32;
 
 var action = {
   Movement: 0
@@ -18,18 +19,18 @@ Player.prototype.update = function () {
   glixl.Sprite.prototype.update.call(this);
 
   if (my_game.key_pressed("d")) {
-    //this.vx = 32;
+    //this.vx = tileSize;
     connection.send("{\"movement\": 1}")
     this.set_animation('walk_right');
   } else if (my_game.key_pressed("a")) {
-    //this.vx = -32;
+    //this.vx = -tileSize;
     connection.send("{\"movement\": 2}")
     this.set_animation('walk_left');
   } else if (my_game.key_pressed("w")) {
-    //this.vy = 32;
+    //this.vy = tileSize;
     connection.send("{\"movement\": 0}")
   } else if (my_game.key_pressed("s")) {
-    //this.vy = -32;
+    //this.vy = -tileSize;
     connection.send("{\"movement\": 3}")
   } else {
     this.set_animation('idle');
@@ -86,8 +87,8 @@ var Example = function () {
     height: this.height * 20,
     sprite_sheet: sprite_sheet,
     tile_size: {
-      width: 32,
-      height: 32
+      width: tileSize,
+      height: tileSize
     }
   });
 
@@ -95,22 +96,22 @@ var Example = function () {
     for (var j = 0; j < 20; j++) {
         scene.add_tile(new glixl.Tile({
           frame: 2,
-          x: i * 32,
-          y: j * 32,
+          x: i * tileSize,
+          y: j * tileSize,
           z: 0,
-          width: 32,
-          height: 32
+          width: tileSize,
+          height: tileSize
         }));
     }
   }
 
   var sprite = new Player({
     frame: 6,
-    x: 64 - 16,
-    y: 96 - 16,
-    z: 32,
-    width: 32,
-    height: 32
+    x: 10 * tileSize,
+    y: 10 * tileSize,
+    z: tileSize,
+    width: tileSize,
+    height: tileSize
   });
 
   sprite.add_animation('walk_right', [18, 19, 20, 21, 22, 23], 60);
@@ -122,6 +123,7 @@ var Example = function () {
   // Log messages from the server
   connection.onmessage = function (socketMsg) {
     var serverData = JSON.parse(socketMsg.data);
+    // Set grid postitions relative to root
     for (var i = 0; i < serverData.grid.length; i++) {
       var row = serverData.grid[i]
       for (var j = 0; j < row.length; j++) {
@@ -130,25 +132,25 @@ var Example = function () {
         if (tile.entity != null) {
           scene.add_tile(new glixl.Tile({
             frame: 1,
-            x: j * 32,
-            y: i * 32,
-            z: 32,
-            width: 32,
-            height: 32
+            x: j * tileSize,
+            y: i * tileSize,
+            z: tileSize,
+            width: tileSize,
+            height: tileSize
           }));
         } else {
           scene.add_tile(new glixl.Tile({
             frame: 2,
-            x: j * 32,
-            y: i * 32,
+            x: j * tileSize,
+            y: i * tileSize,
             z: 0,
-            width: 32,
-            height: 32
+            width: tileSize,
+            height: tileSize
           }));
         }
       }
     }
-    scene.update()
+    scene.update();
   };
 
 
