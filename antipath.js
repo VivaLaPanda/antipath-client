@@ -21,18 +21,14 @@ Player.prototype.update = function () {
 
   if (my_game.key_pressed("d")) {
     this.vx = (tileSize / 4) * this.speed;
-    connection.send("{\"movement\": 1}")
     this.set_animation('walk_right');
   } else if (my_game.key_pressed("a")) {
     this.vx = -(tileSize / 4) * this.speed;
-    connection.send("{\"movement\": 2}")
     this.set_animation('walk_left');
   } else if (my_game.key_pressed("w")) {
     this.vy = (tileSize / 4) * this.speed;
-    connection.send("{\"movement\": 0}")
   } else if (my_game.key_pressed("s")) {
     this.vy = -(tileSize / 4) * this.speed;
-    connection.send("{\"movement\": 3}")
   } else {
     this.set_animation('idle');
   }
@@ -44,6 +40,11 @@ Player.prototype.update = function () {
   //   this.can_jump = false;
   //   this.vy = 15;
   // }
+
+  var posChanged = false;
+  if (this.vx != 0 || this.vy != 0) {
+    posChanged = true;
+  }
 
   this.x += this.vx;
   if (my_game.scene.collide(this)) {
@@ -58,6 +59,19 @@ Player.prototype.update = function () {
   }
   this.vy = 0;
 
+
+  // Send our new position to the server if it changed
+  if (posChanged) {
+    var action = {
+      movement: {
+        X: Math.floor(this.x / tileSize),
+        Y: Math.floor(this.y / tileSize)
+      }
+    }
+
+    connection.send(JSON.stringify(action))
+  }
+
   // this.y -= this.vy;
   // if (my_game.scene.collide(this)) {
   //   this.can_jump = true;
@@ -71,10 +85,18 @@ Player.prototype.update = function () {
   my_game.scene.center_on(this);
 }
 Player.prototype.sync = function (x,y,playerData) {
-  this.x = x * tileSize;
-  this.y = y * tileSize;
+  x = x * tileSize;
+  y = y * tileSize;
   this.z = playerData.altitude * tileSize;
   this.speed = playerData.speed;
+
+  // If we're mostly in sync don't move the player to keep things smooth
+  if (Math.abs(x - this.x) < 32 && Math.abs(y - this.y) < 32) {
+    return
+  }
+
+  this.x = x;
+  this.y = y;
   this.vx = 0;
   this.vy = 0;
   this.vz = 0;
@@ -85,7 +107,7 @@ Player.prototype.sync = function (x,y,playerData) {
 extend(glixl.Sprite, Player);
 
 
-var Example = function () {
+var Antipath = function () {
   glixl.Game.call(this, {});
 
   var sprite_sheet = new glixl.SpriteSheet({
@@ -151,7 +173,7 @@ var Example = function () {
           scene.add_tile(new glixl.Tile({
             frame: 1,
             x: (rootPos.X + j) * tileSize,
-            y: (rootPos.Y + i) * tileSize,
+            y: (rootPos.Y + i - 1) * tileSize,
             z: tileSize,
             width: tileSize,
             height: tileSize
@@ -160,7 +182,7 @@ var Example = function () {
           scene.add_tile(new glixl.Tile({
             frame: 2,
             x: (rootPos.X + j) * tileSize,
-            y: (rootPos.Y + i + 1) * tileSize,
+            y: (rootPos.Y + i - 1) * tileSize,
             z: tile.height * tileSize,
             width: tileSize,
             height: tileSize
@@ -175,12 +197,12 @@ var Example = function () {
   this.set_scene(scene);
 }
 
-Example.prototype.update = function () {
+Antipath.prototype.update = function () {
   document.getElementById('fps').innerHTML = this.fps;
 }
-extend(glixl.Game, Example);
+extend(glixl.Game, Antipath);
 
-my_game = new Example();
+my_game = new Antipath();
 
 connection.onopen = function () {
   my_game.start();
