@@ -20,15 +20,15 @@ Player.prototype.update = function () {
   glixl.Sprite.prototype.update.call(this);
 
   if (my_game.key_pressed("d")) {
-    this.vx = (tileSize / 4) * this.speed;
+    this.vx = this.speed;
     this.set_animation('walk_right');
   } else if (my_game.key_pressed("a")) {
-    this.vx = -(tileSize / 4) * this.speed;
+    this.vx = -this.speed;
     this.set_animation('walk_left');
   } else if (my_game.key_pressed("w")) {
-    this.vy = (tileSize / 4) * this.speed;
+    this.vy = this.speed;
   } else if (my_game.key_pressed("s")) {
-    this.vy = -(tileSize / 4) * this.speed;
+    this.vy = -this.speed;
   } else {
     this.set_animation('idle');
   }
@@ -155,7 +155,6 @@ var Antipath = function () {
 
   scene.add_sprite(sprite);
 
-  // Log messages from the server
   connection.onmessage = function (socketMsg) {
     var serverData = JSON.parse(socketMsg.data);
     // Set grid postitions relative to root
