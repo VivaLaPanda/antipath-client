@@ -149,7 +149,9 @@ var glixl = (function(glixl)
             return; // anything with a row < 0 (because z) can't be displayed anyway, so isn't useful to put in tilemap.
         var depth = Math.floor(tile.z / tile.height);
 
-        this.tiles.push(tile);
+        if (this.tilemap[col][row][0] === false) {
+          this.tiles.push(tile);
+        }
 
         // Only one tile can occupy a space
         this.tilemap[col][row][0] = tile;

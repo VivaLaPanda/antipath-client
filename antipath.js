@@ -12,6 +12,7 @@ var Player = function (parameters) {
 
   this.vx = 0;
   this.vy = 0;
+  this.speed = 1;
   this.can_jump = true;
 }
 
@@ -19,18 +20,18 @@ Player.prototype.update = function () {
   glixl.Sprite.prototype.update.call(this);
 
   if (my_game.key_pressed("d")) {
-    //this.vx = tileSize;
+    this.vx = (tileSize / 4) * this.speed;
     connection.send("{\"movement\": 1}")
     this.set_animation('walk_right');
   } else if (my_game.key_pressed("a")) {
-    //this.vx = -tileSize;
+    this.vx = -(tileSize / 4) * this.speed;
     connection.send("{\"movement\": 2}")
     this.set_animation('walk_left');
   } else if (my_game.key_pressed("w")) {
-    //this.vy = tileSize;
+    this.vy = (tileSize / 4) * this.speed;
     connection.send("{\"movement\": 0}")
   } else if (my_game.key_pressed("s")) {
-    //this.vy = -tileSize;
+    this.vy = -(tileSize / 4) * this.speed;
     connection.send("{\"movement\": 3}")
   } else {
     this.set_animation('idle');
@@ -66,6 +67,18 @@ Player.prototype.update = function () {
   // this.vy -= 1; //Gravity
   // if (this.vy < -10)
   //   this.vy = -10;
+
+  my_game.scene.center_on(this);
+}
+Player.prototype.sync = function (x,y,playerData) {
+  this.x = x * tileSize;
+  this.y = y * tileSize;
+  this.z = playerData.altitude * tileSize;
+  this.speed = playerData.speed;
+  this.vx = 0;
+  this.vy = 0;
+  this.vz = 0;
+  this.set_animation('idle');
 
   my_game.scene.center_on(this);
 }
@@ -124,16 +137,21 @@ var Example = function () {
   connection.onmessage = function (socketMsg) {
     var serverData = JSON.parse(socketMsg.data);
     // Set grid postitions relative to root
-    for (var i = 0; i < serverData.grid.length; i++) {
-      var row = serverData.grid[i]
+    var rootPos = serverData.GameState.root;
+
+    var userPos = serverData.GameState.entities[serverData.ClientID];
+    sprite.sync(userPos.X, userPos.Y, serverData.ClientData)
+
+    for (var i = 0; i < serverData.GameState.grid.length; i++) {
+      var row = serverData.GameState.grid[i]
       for (var j = 0; j < row.length; j++) {
         var tile = row[j]
 
         if (tile.entity != null) {
           scene.add_tile(new glixl.Tile({
             frame: 1,
-            x: j * tileSize,
-            y: i * tileSize,
+            x: (rootPos.X + j) * tileSize,
+            y: (rootPos.Y + i) * tileSize,
             z: tileSize,
             width: tileSize,
             height: tileSize
@@ -141,9 +159,9 @@ var Example = function () {
         } else {
           scene.add_tile(new glixl.Tile({
             frame: 2,
-            x: j * tileSize,
-            y: i * tileSize,
-            z: 0,
+            x: (rootPos.X + j) * tileSize,
+            y: (rootPos.Y + i + 1) * tileSize,
+            z: tile.height * tileSize,
             width: tileSize,
             height: tileSize
           }));
