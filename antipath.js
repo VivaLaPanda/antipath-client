@@ -84,7 +84,7 @@ Player.prototype.update = function () {
 
   my_game.scene.center_on(this);
 }
-Player.prototype.sync = function (x,y,playerData) {
+glixl.Sprite.prototype.sync = function (x,y,playerData) {
   x = x * tileSize;
   y = y * tileSize;
   this.z = playerData.altitude * tileSize;
@@ -101,11 +101,17 @@ Player.prototype.sync = function (x,y,playerData) {
   this.vy = 0;
   this.vz = 0;
   this.set_animation('idle');
-
-  my_game.scene.center_on(this);
 }
 extend(glixl.Sprite, Player);
 
+var Adversary = function (parameters) {
+  parameters.speed = 128;
+  glixl.Sprite.call(this, parameters);
+}
+Adversary.prototype.update = function () {
+  glixl.Sprite.prototype.update.call(this);
+}
+extend(glixl.Sprite, Adversary);
 
 var Antipath = function () {
   glixl.Game.call(this, {});
@@ -155,40 +161,60 @@ var Antipath = function () {
 
   scene.add_sprite(sprite);
 
+  // Map from from ID to sprites
+  var entities = {};
+
   connection.onmessage = function (socketMsg) {
     var serverData = JSON.parse(socketMsg.data);
     // Set grid postitions relative to root
     var rootPos = serverData.GameState.root;
 
-    var userPos = serverData.GameState.entities[serverData.ClientID];
-    sprite.sync(userPos.X, userPos.Y, serverData.ClientData)
-
+    // Update tiles
     for (var i = 0; i < serverData.GameState.grid.length; i++) {
       var row = serverData.GameState.grid[i]
       for (var j = 0; j < row.length; j++) {
         var tile = row[j]
 
-        if (tile.entity != null) {
-          scene.add_tile(new glixl.Tile({
-            frame: 1,
-            x: (rootPos.X + j) * tileSize,
-            y: (rootPos.Y + i - 1) * tileSize,
-            z: tileSize,
-            width: tileSize,
-            height: tileSize
-          }));
-        } else {
-          scene.add_tile(new glixl.Tile({
-            frame: 2,
-            x: (rootPos.X + j) * tileSize,
-            y: (rootPos.Y + i - 1) * tileSize,
-            z: tile.height * tileSize,
-            width: tileSize,
-            height: tileSize
-          }));
-        }
+        scene.add_tile(new glixl.Tile({
+          frame: 2,
+          x: (rootPos.X + j) * tileSize,
+          y: (rootPos.Y + i) * tileSize,
+          z: tile.height * tileSize,
+          width: tileSize,
+          height: tileSize
+        }));
       }
     }
+
+    // Update entities
+    for (id in serverData.GameState.entities) {
+      var entityPos = serverData.GameState.entities[id];
+      var entityData = serverData.GameState.grid[entityPos.Y - rootPos.Y][entityPos.X - rootPos.X].entity;
+      if (!entities[id]) {
+        // The player character is already set, just store the reference and move on
+        if (id === serverData.ClientData.playerID) {
+          entities[id] = sprite;
+          continue;
+        }
+
+        // Add a new adversary
+        var newPlayer = new Adversary({
+          frame: 6,
+          x: entityPos.X * tileSize,
+          y: entityPos.Y * tileSize,
+          z: entityData.altitude * tileSize,
+          width: tileSize,
+          height: tileSize
+        });
+
+        scene.add_sprite(newPlayer);
+        entities[id] = newPlayer;
+      }
+
+      // Sync the client entity with what's on the server
+      entities[id].sync(entityPos.X, entityPos.Y, entityData)
+    }
+
     scene.update();
   };
 

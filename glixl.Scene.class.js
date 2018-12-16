@@ -151,10 +151,13 @@ var glixl = (function(glixl)
 
         if (this.tilemap[col][row][0] === false) {
           this.tiles.push(tile);
+          this.tilemap[col][row][0] = tile;
         }
 
         // Only one tile can occupy a space
-        this.tilemap[col][row][0] = tile;
+        for (var key in tile) {
+          this.tilemap[col][row][depth][key] = tile[key];
+        }
     }
 
     glixl.Scene.prototype.add_tileset = function(tileset)
