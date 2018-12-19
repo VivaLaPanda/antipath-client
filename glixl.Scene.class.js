@@ -312,6 +312,35 @@ var glixl = (function(glixl)
         var row = Math.floor(object.y / this.tile_size.height);
         var depth = Math.floor(object.z / this.tile_size.height);
 
+        // This is maybe slow. If the # of entities is small I think it'll be
+        // faster than making an entitymap like for tiles though.
+        for(var s=0 ; s<this.sprites.length ; s++)
+        {
+            if (this.sprites[s] == object) {
+              continue;
+            }
+            
+            x1 = this.sprites[s].x;
+            x2 = this.sprites[s].x + this.sprites[s].width;
+            y1 = this.sprites[s].y;
+            y2 = this.sprites[s].y + this.sprites[s].height;
+            z = this.sprites[s].z;
+
+            if (object.x >= x1 && object.x < x2) {
+              if (object.y >= y1 && object.y < y2) {
+                if (object.z === z) {
+                  return true;
+                } else {
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            } else {
+              continue;
+            }
+        }
+
         return this.tilemap[col][row][depth];
     }
 
