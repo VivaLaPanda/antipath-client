@@ -319,7 +319,7 @@ var glixl = (function(glixl)
             if (this.sprites[s] == object) {
               continue;
             }
-            
+
             x1 = this.sprites[s].x;
             x2 = this.sprites[s].x + this.sprites[s].width;
             y1 = this.sprites[s].y;
@@ -406,44 +406,44 @@ var glixl = (function(glixl)
              *  to the closed list, recalculate its score from the current node and
              *  update it if it's already in the open list.
              */
-            var moore_neighbourhood = [];
+            var von_neumann_neighborhood = [];
             if (col > 0)
             {
-                moore_neighbourhood.push([col-1, row]);
+                von_neumann_neighborhood.push([col-1, row]);
                 if (row > 0)
                 {
-                    moore_neighbourhood.push([col-1, row-1]);
+                    von_neumann_neighborhood.push([col-1, row-1]);
                 }
             }
             if (col < this.columns-1)
             {
-                moore_neighbourhood.push([col+1, row]);
+                von_neumann_neighborhood.push([col+1, row]);
                 if (row < this.rows-1)
                 {
-                    moore_neighbourhood.push([col+1, row+1]);
+                    von_neumann_neighborhood.push([col+1, row+1]);
                 }
             }
             if (row > 0)
             {
-                moore_neighbourhood.push([col, row-1]);
+                von_neumann_neighborhood.push([col, row-1]);
                 if (col < this.columns-1)
                 {
-                    moore_neighbourhood.push([col+1, row-1]);
+                    von_neumann_neighborhood.push([col+1, row-1]);
                 }
             }
             if (row < this.rows-1)
             {
-                moore_neighbourhood.push([col, row+1]);
+                von_neumann_neighborhood.push([col, row+1]);
                 if (col > 0)
                 {
-                    moore_neighbourhood.push([col-1, row+1]);
+                    von_neumann_neighborhood.push([col-1, row+1]);
                 }
             }
 
-            for (var i=0 ; i<moore_neighbourhood.length ; i++)
+            for (var i=0 ; i<von_neumann_neighborhood.length ; i++)
             {
-                var c = moore_neighbourhood[i][0];
-                var r = moore_neighbourhood[i][1];
+                var c = von_neumann_neighborhood[i][0];
+                var r = von_neumann_neighborhood[i][1];
                 // TODO: Allow some tiles to be collidable / not collidable
                 //if ( (typeof this.tilemap[c][r] === 'undefined' || typeof this.tilemap[c][r][depth] === 'undefined' || !this.tilemap[c][r][depth].collidable) && !findInClosed(c, r) )
                 if ( !this.tilemap[c][r][depth] && !findInClosed(c, r) )
