@@ -14,6 +14,7 @@ var Player = function (parameters) {
   this.vy = 0;
   this.speed = 1;
   this.can_jump = true;
+  this.alignment = 0;
 }
 
 Player.prototype.update = function () {
@@ -32,18 +33,30 @@ Player.prototype.update = function () {
   } else {
     this.set_animation('idle');
   }
-  // if (my_game.key_pressed("w") && this.can_jump) {
-  //   this.can_jump = false;
-  //   this.vy = 15;
-  // }
-  // if (my_game.key_pressed("w") && this.can_jump) {
-  //   this.can_jump = false;
-  //   this.vy = 15;
-  // }
 
-  var posChanged = false;
+
+  var stateChanged = false;
+  var attack = false;
+  if (my_game.key_pressed("j")) {
+    stateChanged = true;
+    attack = 0;
+  } else if (my_game.key_pressed("k")) {
+    stateChanged = true;
+    attack = 1;
+  } else if (my_game.key_pressed("l")) {
+    stateChanged = true;
+    attack = 2;
+  }
+  // if (my_game.key_pressed("w") && this.can_jump) {
+  //   this.can_jump = false;
+  //   this.vy = 15;
+  // }
+  // if (my_game.key_pressed("w") && this.can_jump) {
+  //   this.can_jump = false;
+  //   this.vy = 15;
+  // }
   if (this.vx != 0 || this.vy != 0) {
-    posChanged = true;
+    stateChanged = true;
   }
 
   this.x += this.vx;
@@ -61,12 +74,13 @@ Player.prototype.update = function () {
 
 
   // Send our new position to the server if it changed
-  if (posChanged) {
+  if (stateChanged) {
     var action = {
       movement: {
         X: Math.floor(this.x / tileSize),
         Y: Math.floor(this.y / tileSize)
-      }
+      },
+      attack: attack
     }
 
     connection.send(JSON.stringify(action))
@@ -89,6 +103,8 @@ glixl.Sprite.prototype.sync = function (x,y,playerData) {
   y = y * tileSize;
   this.z = playerData.altitude * tileSize;
   this.speed = playerData.speed;
+  this.alignment = playerData.alignment;
+  this.direction = playerData.direction;
 
   // If we're mostly in sync don't move the player to keep things smooth
   if (Math.abs(x - this.x) < 32 && Math.abs(y - this.y) < 32) {
@@ -107,6 +123,8 @@ extend(glixl.Sprite, Player);
 var Adversary = function (parameters) {
   parameters.speed = 128;
   glixl.Sprite.call(this, parameters);
+
+  this.alignment = 0;
 }
 Adversary.prototype.update = function () {
   glixl.Sprite.prototype.update.call(this);
